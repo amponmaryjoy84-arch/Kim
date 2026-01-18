@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Metro Dumeguetie College - Moral and Non-Moral Rules Quiz</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .page { display: none; }
+        .active { display: block; }
+        .question { margin-bottom: 20px; }
+        .options { margin-left: 20px; }
+        .result { margin: 10px 0; }
+        .correct { color: green; }
+        .incorrect { color: red; }
+        button { padding: 10px 20px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div id="intro" class="page active">
+        <h1>Welcome to Metro Dumeguetie College</h1>
+        <p>This quiz is about Moral and Non-Moral Rules. Please enter your basic information to proceed.</p>
+        <form id="infoForm">
+            <label for="name">Name:</label>
+            <input type="text" id="name" required><br><br>
+            <label for="id">Student ID:</label>
+            <input type="text" id="id" required><br><br>
+            <button type="submit">Start Quiz</button>
+        </form>
+    </div>
+
+    <div id="quiz" class="page">
+        <h2>Quiz</h2>
+        <div id="questionContainer"></div>
+        <button id="submitBtn" style="display:none;">Submit Answer</button>
+        <button id="nextBtn" style="display:none;">Next Question</button>
+    </div>
+
+    <div id="results" class="page">
+        <h2>Results</h2>
+        <div id="score"></div>
+        <div id="details"></div>
+        <button id="sendBtn">Send Results via Gmail</button>
+    </div>
+
+    <script>
+        const questions = [
+            { q: "1. Why are rules important in society?", options: ["A. They limit people's freedom", "B. They help maintain order and fairness", "C. They only benefit leaders", "D. They confuse people"], correct: "B" },
+            { q: "2. Which situation best shows a moral standard?", options: ["A. Wearing a school uniform", "B. Helping an injured person", "C. Following traffic signs", "D. Arriving on time for class"], correct: "B" },
+            { q: "3. What is a non-moral standard?", options: ["A. Telling the truth", "B. Respecting elders", "C. Choosing fashionable clothes", "D. Being honest"], correct: "C" },
+            { q: "4. Why are moral rules important?", options: ["A. They are written in books", "B. They help distinguish right from wrong", "C. They change every day", "D. They are optional"], correct: "B" },
+            { q: "5. Which example shows a non-moral rule?", options: ["A. Do not steal", "B. Do not lie", "C. School dress code", "D. Respect human life"], correct: "C" },
+            { q: "6. What makes a situation a moral dilemma?", options: ["A. There is only one correct choice", "B. It involves no consequences", "C. Choosing one action means doing something wrong", "D. The decision is easy"], correct: "C" },
+            { q: "7. A student finds a lost wallet with money inside. What is the moral action?", options: ["A. Keep the money", "B. Ignore it", "C. Return it to the owner", "D. Throw it away"], correct: "C" },
+            { q: "8. Which situation is an example of a moral dilemma?", options: ["A. Choosing what color of bag to buy", "B. Deciding whether to tell a painful truth or keep a secret", "C. Wearing slippers at home", "D. Following a class schedule"], correct: "B" },
+            { q: "9. Moral rules are different from non-moral rules because moral rules?", options: ["A. Are about fashion and preferences", "B. Are only followed in school", "C. Concern right and wrong actions", "D. Can be ignored anytime"], correct: "C" },
+            { q: "10. Why should people follow moral and nonmoral rules?", options: ["A. To avoid punishment only", "B. To create harmony and order in society", "C. To impress others", "D. To show power"], correct: "B" }
+        ];
+
+        let currentQuestion = 0;
+        let answers = [];
+        let studentInfo = {};
+
+        document.getElementById('infoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            studentInfo.name = document.getElementById('name').value;
+            studentInfo.id = document.getElementById('id').value;
+            document.getElementById('intro').classList.remove('active');
+            document.getElementById('quiz').classList.add('active');
+            showQuestion();
+        });
+
+        function showQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('questionContainer').innerHTML = `
+                <div class="question">${q.q}</div>
+                <div class="options">
+                    ${q.options.map((opt, i) => `<label><input type="radio" name="answer" value="${opt.charAt(0)}"> ${opt}</label><br>`).join('')}
+                </div>
+            `;
+            document.getElementById('submitBtn').style.display = 'block';
+            document.getElementById('nextBtn').style.display = 'none';
+        }
+
+        document.getElementById('submitBtn').addEventListener('click', function() {
+            const selected = document.querySelector('input[name="answer"]:checked');
+            if (selected) {
+                answers.push(selected.value);
+                document.querySelectorAll('input[name="answer"]').forEach(radio => radio.disabled = true);
+                document.getElementById('submitBtn').style.display = 'none';
+                document.getElementById('nextBtn').style.display = 'block';
+            }
+        });
+
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        });
+
+        function showResults() {
+            document.getElementById('quiz').classList.remove('active');
+            document.getElementById('results').classList.add('active');
+            let correctCount = 0;
+            let details = '';
+            questions.forEach((q, i) => {
+                const isCorrect = answers[i] === q.correct;
+                if (isCorrect) correctCount++;
+                details += `<div class="result ${isCorrect ? 'correct' : 'incorrect'}">Question ${i+1}: ${isCorrect ? 'Correct' : 'Incorrect'} (Your answer: ${answers[i]}, Correct: ${q.correct})</div>`;
+            });
+            document.getElementById('score').innerHTML = `Score: ${correctCount}/${questions.length}`;
+            document.getElementById('details').innerHTML = details;
+        }
+
+        document.getElementById('sendBtn').addEventListener('click', function() {
+            const score = document.getElementById('score').innerText;
+            const details = document.getElementById('details').innerText.replace(/<[^>]*>/g, ''); // Strip HTML tags for plain text
+            const subject = encodeURIComponent(`Quiz Results from ${studentInfo.name} (ID: ${studentInfo.id})`);
+            const body = encodeURIComponent(`Quiz Results:\n${score}\n\nDetails:\n${details}`);
+            const mailtoLink = `mailto:kimsalicsic09@gmail.com?subject=${subject}&body=${body}`;
+            window.location.href = mailtoLink; // This will open the default email client (e.g., Gmail if set) with pre-filled content
+        });
+    </script>
+</body>
+</html>
